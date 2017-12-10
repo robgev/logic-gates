@@ -41,6 +41,11 @@ mov BITS01, bl ;store the square root result in BITS01
 ;   * I think we could do well even without the subroutines     *
 ;   * I wrote all the subroutines, even AND, OR and XOR           *
 ;   * Although they are all already available in the lang        *
+;   * My program works layer by layer, it does all the             *
+;   * Operations that come first, backs up results serially     *
+;   * In bh and then starts to work with the resulting byte      *
+;   * It continues applying the same iterative logic until        *
+;   * All three layers are finished                                              *
 ;   ******************************************************
 
 
@@ -117,53 +122,57 @@ NAND:
     ret                 ; uncomment for subroutine
 
 NOR:
-    mov bl,al           ; copy of input bits into BL
-    mov cl,al           ; and another in CL
-    and bl, 00000001B   ; mask off all bits except input bit 0
-    and cl, 00000010B   ; mask off all bits except input bit 1
-    shr cl,1            ; move bit 1 value into bit 0 of CL register
-                        ; now we have the binary value of each bit in BL and CL, in bit 0 location
-    or bl,cl           ; AND these two registers, result in BL
-    not bl              ; invert bits for the not part of nand
-    and bl, 00000001B   ; clear all upper bits positions leaving bit 0 either a zero or one
+      ; substitute AND with OR
+    mov bl,al
+    mov cl,al
+    and bl, 00000001B
+    and cl, 00000010B
+    shr cl,1
 
-    mov ah, bl          ; copy answer into return value register
-    ret                 ; uncomment for subroutine
+    or bl,cl
+    not bl
+    and bl, 00000001B
+
+    mov ah, bl
+    ret
 
 CUSTOM_XOR:
-    mov bl,al           ; copy of input bits into BL
-    mov cl,al           ; and another in CL
-    and bl, 00000001B   ; mask off all bits except input bit 0
-    and cl, 00000010B   ; mask off all bits except input bit 1
-    shr cl,1            ; move bit 1 value into bit 0 of CL register
-                        ; now we have the binary value of each bit in BL and CL, in bit 0 location
-    xor bl,cl           ; AND these two registers, result in BL
-    and bl, 00000001B   ; clear all upper bits positions leaving bit 0 either a zero or one
+      ; substitute AND with XOR
+    mov bl,al
+    mov cl,al
+    and bl, 00000001B
+    and cl, 00000010B
+    shr cl,1
 
-    mov ah, bl          ; copy answer into return value register
-    ret                 ; uncomment for subroutine
+    xor bl,cl
+    and bl, 00000001B
+
+    mov ah, bl
+    ret
 
   CUSTOM_OR:
-      mov bl,al           ; copy of input bits into BL
-      mov cl,al           ; and another in CL
-      and bl, 00000001B   ; mask off all bits except input bit 0
-      and cl, 00000010B   ; mask off all bits except input bit 1
-      shr cl,1            ; move bit 1 value into bit 0 of CL register
-                          ; now we have the binary value of each bit in BL and CL, in bit 0 location
-      or bl,cl           ; AND these two registers, result in BL
-      and bl, 00000001B   ; clear all upper bits positions leaving bit 0 either a zero or one
+      ; substitute AND with OR
+      mov bl,al
+      mov cl,al
+      and bl, 00000001B
+      and cl, 00000010B
+      shr cl,1
 
-      mov ah, bl          ; copy answer into return value register
-      ret                 ; uncomment for subroutine
+      or bl,cl
+      and bl, 00000001B
+
+      mov ah, bl
+      ret
 
   CUSTOM_NOT:
-      mov bl,al           ; copy of input bits into BL
-      and bl, 00000001B   ; mask off all bits except input bit 0
+      ; remove second register, NOT has one "argument"
+      mov bl,al
+      and bl, 00000001B
       not bl
-      and bl, 00000001B   ; clear all upper bits positions leaving bit 0 either a zero or one
+      and bl, 00000001B
 
-      mov ah, bl          ; copy answer into return value register
-      ret                 ; uncomment for subroutine
+      mov ah, bl
+      ret
 
 
 OUTPUT:
